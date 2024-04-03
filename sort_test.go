@@ -20,6 +20,9 @@ func TestSortStrings(t *testing.T) {
 		"0000006",
 		"7",
 		"100",
+		"201",
+		"2001",
+		"200X",
 		"X001",
 		"X002",
 		"X0003",
@@ -36,6 +39,9 @@ func TestSortStrings(t *testing.T) {
 		"0000006",
 		"7",
 		"100",
+		"201",
+		"2001",
+		"200X",
 		"X0003",
 		"X001",
 		"X002",
@@ -47,14 +53,11 @@ func TestSortStrings(t *testing.T) {
 		"orange",
 	}
 
-	// ソート対象のsliceをコピー
 	target := make([]string, len(input))
 	copy(target, input)
 
-	// ソート
 	SortRegular(target)
 
-	// ソート結果が期待通りかどうか確認
 	if !reflect.DeepEqual(target, expected) {
 		t.Errorf("Expected: %#v, got: %#v", expected, target)
 	}
