@@ -2,27 +2,38 @@ package sortregular
 
 import (
 	"math"
-	"sort"
+	"unsafe"
 )
 
 const (
 	IS_LONG   = 1
-	IS_DOUBLE = 2
+	IS_DOUBLE = 2 // not supported
 
 	longMinDigits = "-9223372036854775808"
 )
 
 func SortRegular(strings []string) {
-	sort.SliceStable(strings, func(i, j int) bool {
-		r := zendiSmartStrcmp(strings[i], strings[j])
-		return r < 0
-	})
+	cmp := func(a, b unsafe.Pointer) int {
+		intA := *(*string)(a)
+		intB := *(*string)(b)
+		return ZendiSmartStrcmp(intA, intB)
+	}
+
+	swp := func(a, b unsafe.Pointer) {
+		temp := *(*string)(a)
+		*(*string)(a) = *(*string)(b)
+		*(*string)(b) = temp
+	}
+
+	ZendSort(strings, cmp, swp)
 }
 
 func zendBinaryStrcmp(s1, s2 string) int {
 	return strcmp([]byte(s1), []byte(s2))
 }
 
+// If s1 is larger, return 1
+// If s2 is larger, return -1
 func strcmp(s1, s2 []byte) int {
 	for i := 0; i < len(s1) && i < len(s2); i++ {
 		if s1[i] < s2[i] {
@@ -39,6 +50,7 @@ func strcmp(s1, s2 []byte) int {
 	return 0
 }
 
+// https://github.com/php/php-src/blob/7a3516cca5ad307ca7dcb63224448661f30d623e/Zend/zend_operators.c#L3507
 func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 	// Check if the string is a numeric string
 	length := len(str)
@@ -47,8 +59,8 @@ func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 	}
 
 	ptr := 0
-	digits := 0
-	dpOrE := 0
+	// digits := 0
+	// dpOrE := 0
 	localDval := 0.0
 	var tmpLval int64
 	neg := false
@@ -66,30 +78,10 @@ func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 	}
 
 	if ptr < length && isDigit(str[ptr]) {
-		for ptr < length && (isDigit(str[ptr]) || (str[ptr] == '.' && dpOrE < 1) || ((str[ptr] == 'e' || str[ptr] == 'E') && dpOrE < 2)) {
-			if isDigit(str[ptr]) {
-				tmpLval = tmpLval*10 + int64(str[ptr]-'0')
-				digits++
-				// } else if str[ptr] == '.' && dpOrE < 1 {
-				// 	dpOrE = 1
-				// } else if (str[ptr] == 'e' || str[ptr] == 'E') && dpOrE < 2 {
-				// 	dpOrE = 2
-			} else {
-				if neg {
-					tmpLval = -tmpLval
-				}
-
-				return IS_LONG, 0, tmpLval, localDval, false
-			}
+		for ptr < length && (isDigit(str[ptr])) {
+			tmpLval = tmpLval*10 + int64(str[ptr]-'0')
 			ptr++
 		}
-
-		if digits >= 19 {
-			return IS_DOUBLE, 0, 0, 0, true
-		}
-	} else if ptr < length && str[ptr] == '.' && ptr+1 < length && isDigit(str[ptr+1]) {
-		dpOrE = 1
-		ptr++
 	} else {
 		return 0, 0, 0, 0, false
 	}
@@ -100,12 +92,6 @@ func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 		}
 		if ptr < length {
 			return 0, 0, 0, 0, true
-		}
-	}
-
-	if digits == 19 {
-		if cmp := strcmp([]byte(str[:digits]), []byte(longMinDigits)); cmp >= 0 {
-			return IS_DOUBLE, 0, 0, 0, true
 		}
 	}
 
@@ -129,7 +115,10 @@ func zendNormalizeBool(value float64) int {
 	return 0
 }
 
-func zendiSmartStrcmp(s1, s2 string) int {
+// if s1 is larger, return 1
+// if s2 is larger, return -1
+// https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/Zend/zend_operators.c#L3323
+func ZendiSmartStrcmp(s1, s2 string) int {
 	ret1, _, lval1, dval1, _ := isNumericStringEx(s1)
 	ret2, _, lval2, dval2, _ := isNumericStringEx(s2)
 
@@ -138,29 +127,12 @@ func zendiSmartStrcmp(s1, s2 string) int {
 			return zendNormalizeBool(dval1)
 		}
 
-		if ret1 == IS_DOUBLE || ret2 == IS_DOUBLE {
-			if ret1 != IS_DOUBLE {
-				if lval2 > math.MaxInt64 {
-					return -1
-				}
-				dval1 = float64(lval1)
-			} else if ret2 != IS_DOUBLE {
-				if lval1 > math.MaxInt64 {
-					return 1
-				}
-				dval2 = float64(lval2)
-			} else if dval1 == dval2 && !math.IsInf(dval1, 0) {
-				return zendBinaryStrcmp(s1, s2)
-			}
-			return zendNormalizeBool(dval1 - dval2)
-		} else {
-			if lval1 > lval2 {
-				return 1
-			} else if lval1 < lval2 {
-				return -1
-			}
-			return 0
+		if lval1 > lval2 {
+			return 1
+		} else if lval1 < lval2 {
+			return -1
 		}
+		return 0
 	} else {
 		return zendBinaryStrcmp(s1, s2)
 	}
