@@ -75,14 +75,23 @@ func zendSort2(a, b unsafe.Pointer, cmp compareFunc, swp swapFunc) {
 }
 
 func zendSort3(a, b, c unsafe.Pointer, cmp compareFunc, swp swapFunc) {
-	if cmp(a, b) > 0 {
-		swp(a, b)
-	}
-	if cmp(b, c) > 0 {
+	if !(cmp(a, b) > 0) {
+		if !(cmp(b, c) > 0) {
+			return
+		}
 		swp(b, c)
 		if cmp(a, b) > 0 {
 			swp(a, b)
 		}
+		return
+	}
+	if !(cmp(c, b) > 0) {
+		swp(a, c)
+		return
+	}
+	swp(a, b)
+	if cmp(b, c) > 0 {
+		swp(b, c)
 	}
 }
 func zendSort4(a, b, c, d unsafe.Pointer, cmp compareFunc, swp swapFunc) {

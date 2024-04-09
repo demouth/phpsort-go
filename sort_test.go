@@ -203,6 +203,45 @@ func TestSortStrings(t *testing.T) {
 				"orange",
 			},
 		},
+		{
+			"test5.php",
+			[]string{
+				"1",
+				" 2",
+				" A3",
+			},
+			[]string{
+				"1",
+				" 2",
+				" A3",
+			},
+		},
+		{
+			"test6.php",
+			[]string{
+				" A3",
+				"1",
+				" 2",
+			},
+			[]string{
+				" A3",
+				"1",
+				" 2",
+			},
+		},
+		{
+			"test7.php",
+			[]string{
+				"1",
+				" A3",
+				" 2",
+			},
+			[]string{
+				" 2",
+				" A3",
+				"1",
+			},
+		},
 	}
 
 	for _, test := range tests {
