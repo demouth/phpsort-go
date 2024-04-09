@@ -242,6 +242,17 @@ func TestSortStrings(t *testing.T) {
 				"1",
 			},
 		},
+		{
+			"8.php",
+			[]string{
+				"2",
+				"1",
+			},
+			[]string{
+				"1",
+				"2",
+			},
+		},
 	}
 
 	for _, test := range tests {
