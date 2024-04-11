@@ -2,6 +2,9 @@ package sortregular
 
 import (
 	"reflect"
+	"slices"
+	"sort"
+	"strconv"
 	"testing"
 )
 
@@ -267,4 +270,41 @@ func TestSortStrings(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Benchmark100(b *testing.B) {
+	strs := makeStrings(100)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		SortRegular(strs)
+	}
+}
+
+func BenchmarkSlicesPackage100(b *testing.B) {
+	strs := makeStrings(100)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		slices.Sort(strs)
+	}
+}
+
+func BenchmarkCmp100000(b *testing.B) {
+	strs := makeStrings(100000)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sort.SliceStable(strs, func(i, j int) bool {
+			if ZendiSmartStrcmp(strs[i], strs[j]) < 0 {
+				return true
+			}
+			return false
+		})
+	}
+}
+
+func makeStrings(n int) []string {
+	base := make([]string, n)
+	for i := 0; i < n; i++ {
+		base[i] = strconv.Itoa(i)
+	}
+	return base
 }
