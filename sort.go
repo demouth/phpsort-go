@@ -25,7 +25,7 @@ func SortRegular(strings []string) {
 		*(*string)(b) = temp
 	}
 
-	ZendSort(strings, cmp, swp)
+	ZendSort(strings, 0, len(strings)-1, cmp, swp)
 }
 
 func zendBinaryStrcmp(s1, s2 string) int {

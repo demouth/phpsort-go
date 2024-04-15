@@ -256,6 +256,41 @@ func TestSortStrings(t *testing.T) {
 				"2",
 			},
 		},
+		{
+			"9.php",
+			[]string{
+				"5",
+				"4",
+				"3",
+				"2",
+				"1",
+			},
+			[]string{
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+			},
+		},
+		{
+			"test10.php",
+			[]string{
+				"3",
+				"3",
+				"2",
+			},
+			[]string{
+				"2",
+				"3",
+				"3",
+			},
+		},
+		{
+			"big slice",
+			makeReverseStrings(1000),
+			makeStrings(1000),
+		},
 	}
 
 	for _, test := range tests {
@@ -305,6 +340,14 @@ func makeStrings(n int) []string {
 	base := make([]string, n)
 	for i := 0; i < n; i++ {
 		base[i] = strconv.Itoa(i)
+	}
+	return base
+}
+
+func makeReverseStrings(n int) []string {
+	base := make([]string, n)
+	for i := 0; i < n; i++ {
+		base[n-1-i] = strconv.Itoa(i)
 	}
 	return base
 }
