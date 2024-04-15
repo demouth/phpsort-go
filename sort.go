@@ -2,7 +2,7 @@ package sortregular
 
 import (
 	"math"
-	"unsafe"
+	"reflect"
 )
 
 const (
@@ -13,18 +13,8 @@ const (
 )
 
 func SortRegular(strings []string) {
-	cmp := func(a, b unsafe.Pointer) int {
-		intA := *(*string)(a)
-		intB := *(*string)(b)
-		return ZendiSmartStrcmp(intA, intB)
-	}
-
-	swp := func(a, b unsafe.Pointer) {
-		temp := *(*string)(a)
-		*(*string)(a) = *(*string)(b)
-		*(*string)(b) = temp
-	}
-
+	cmp := ZendiSmartStrcmp
+	swp := reflect.Swapper(strings)
 	ZendSort(strings, 0, len(strings)-1, cmp, swp)
 }
 

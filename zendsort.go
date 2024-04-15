@@ -1,12 +1,8 @@
 package sortregular
 
-import (
-	"unsafe"
-)
+type compareFunc func(a, b string) int
 
-type compareFunc func(a, b unsafe.Pointer) int
-
-type swapFunc func(a, b unsafe.Pointer)
+type swapFunc func(i int, j int)
 
 // https://github.com/php/php-src/blob/0a0e8064e044b133da423952d8e78d50c4841a2e/Zend/zend_sort.c#L248
 func ZendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
@@ -19,19 +15,16 @@ func ZendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
 			startIdx := start
 			endIdx := startIdx + nmemb
 			pivotIdx := start + (nmemb >> 1)
-			startP := unsafe.Pointer(&base[startIdx])
-			endP := unsafe.Pointer(&base[endIdx-1])
-			pivot := unsafe.Pointer(&base[pivotIdx])
 
-			zendSort3(startP, pivot, endP, cmp, swp)
-			swp(unsafe.Pointer(&base[start+1]), pivot)
+			zendSort3(base, startIdx, pivotIdx, endIdx-1, cmp, swp)
+			swp(start+1, pivotIdx)
 			pivotIdx = start + 1
-			pivot = unsafe.Pointer(&base[pivotIdx])
+			pivot := base[pivotIdx]
 			i := pivotIdx + 1
 			j := startIdx + nmemb - 1
 
 			for {
-				for cmp(pivot, unsafe.Pointer(&base[i])) > 0 {
+				for cmp(pivot, base[i]) > 0 {
 					i++
 					if i == j {
 						goto done
@@ -41,20 +34,20 @@ func ZendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
 				if j == i {
 					goto done
 				}
-				for cmp(unsafe.Pointer(&base[j]), pivot) > 0 {
+				for cmp(base[j], pivot) > 0 {
 					j--
 					if j == i {
 						goto done
 					}
 				}
-				swp(unsafe.Pointer(&base[i]), unsafe.Pointer(&base[j]))
+				swp(i, j)
 				i++
 				if i == j {
 					goto done
 				}
 			}
 		done:
-			swp(unsafe.Pointer(&base[pivotIdx]), unsafe.Pointer(&base[i-1]))
+			swp(pivotIdx, i-1)
 			if i-1-startIdx < endIdx-i {
 				ZendSort(base, start, i-1, cmp, swp)
 				start = i
@@ -66,54 +59,54 @@ func ZendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
 	}
 }
 
-func zendSort2(a, b unsafe.Pointer, cmp compareFunc, swp swapFunc) {
-	if cmp(a, b) > 0 {
+func zendSort2(base []string, a, b int, cmp compareFunc, swp swapFunc) {
+	if cmp(base[a], base[b]) > 0 {
 		swp(a, b)
 	}
 }
 
-func zendSort3(a, b, c unsafe.Pointer, cmp compareFunc, swp swapFunc) {
-	if !(cmp(a, b) > 0) {
-		if !(cmp(b, c) > 0) {
+func zendSort3(base []string, a, b, c int, cmp compareFunc, swp swapFunc) {
+	if !(cmp(base[a], base[b]) > 0) {
+		if !(cmp(base[b], base[c]) > 0) {
 			return
 		}
 		swp(b, c)
-		if cmp(a, b) > 0 {
+		if cmp(base[a], base[b]) > 0 {
 			swp(a, b)
 		}
 		return
 	}
-	if !(cmp(c, b) > 0) {
+	if !(cmp(base[c], base[b]) > 0) {
 		swp(a, c)
 		return
 	}
 	swp(a, b)
-	if cmp(b, c) > 0 {
+	if cmp(base[b], base[c]) > 0 {
 		swp(b, c)
 	}
 }
-func zendSort4(a, b, c, d unsafe.Pointer, cmp compareFunc, swp swapFunc) {
-	zendSort3(a, b, c, cmp, swp)
-	if cmp(c, d) > 0 {
+func zendSort4(base []string, a, b, c, d int, cmp compareFunc, swp swapFunc) {
+	zendSort3(base, a, b, c, cmp, swp)
+	if cmp(base[c], base[d]) > 0 {
 		swp(c, d)
-		if cmp(b, c) > 0 {
+		if cmp(base[b], base[c]) > 0 {
 			swp(b, c)
-			if cmp(a, b) > 0 {
+			if cmp(base[a], base[b]) > 0 {
 				swp(a, b)
 			}
 		}
 	}
 }
 
-func zendSort5(a, b, c, d, e unsafe.Pointer, cmp compareFunc, swp swapFunc) {
-	zendSort4(a, b, c, d, cmp, swp)
-	if cmp(d, e) > 0 {
+func zendSort5(base []string, a, b, c, d, e int, cmp compareFunc, swp swapFunc) {
+	zendSort4(base, a, b, c, d, cmp, swp)
+	if cmp(base[d], base[e]) > 0 {
 		swp(d, e)
-		if cmp(c, d) > 0 {
+		if cmp(base[c], base[d]) > 0 {
 			swp(c, d)
-			if cmp(b, c) > 0 {
+			if cmp(base[b], base[c]) > 0 {
 				swp(b, c)
-				if cmp(a, b) > 0 {
+				if cmp(base[a], base[b]) > 0 {
 					swp(a, b)
 				}
 			}
@@ -128,35 +121,39 @@ func zendInsertSort(base []string, start, end int, cmp compareFunc, swp swapFunc
 		// No need to sort
 	case 2:
 		zendSort2(
-			unsafe.Pointer(&base[0+start]),
-			unsafe.Pointer(&base[1+start]),
+			base,
+			0+start,
+			1+start,
 			cmp,
 			swp,
 		)
 	case 3:
 		zendSort3(
-			unsafe.Pointer(&base[0+start]),
-			unsafe.Pointer(&base[1+start]),
-			unsafe.Pointer(&base[2+start]),
+			base,
+			0+start,
+			1+start,
+			2+start,
 			cmp,
 			swp,
 		)
 	case 4:
 		zendSort4(
-			unsafe.Pointer(&base[0+start]),
-			unsafe.Pointer(&base[1+start]),
-			unsafe.Pointer(&base[2+start]),
-			unsafe.Pointer(&base[3+start]),
+			base,
+			0+start,
+			1+start,
+			2+start,
+			3+start,
 			cmp,
 			swp,
 		)
 	case 5:
 		zendSort5(
-			unsafe.Pointer(&base[0+start]),
-			unsafe.Pointer(&base[1+start]),
-			unsafe.Pointer(&base[2+start]),
-			unsafe.Pointer(&base[3+start]),
-			unsafe.Pointer(&base[4+start]),
+			base,
+			0+start,
+			1+start,
+			2+start,
+			3+start,
+			4+start,
 			cmp,
 			swp,
 		)
@@ -167,28 +164,28 @@ func zendInsertSort(base []string, start, end int, cmp compareFunc, swp swapFunc
 
 		for i := 1 + start; i < sentry; i += 1 {
 			j := i - 1
-			if cmp(unsafe.Pointer(&base[j]), unsafe.Pointer(&base[i])) > 0 {
+			if cmp(base[j], base[i]) > 0 {
 				for j != start {
 					j -= 1
-					if cmp(unsafe.Pointer(&base[j]), unsafe.Pointer(&base[i])) <= 0 {
+					if cmp(base[j], base[i]) <= 0 {
 						j += 1
 						break
 					}
 				}
 				for k := i; k > j; k -= 1 {
-					swp(unsafe.Pointer(&base[k]), unsafe.Pointer(&base[k-1]))
+					swp(k, k-1)
 				}
 			}
 		}
 
 		for i := sentry; i < end+1; i += 1 {
 			j := i - 1
-			if cmp(unsafe.Pointer(&base[j]), unsafe.Pointer(&base[i])) > 0 {
+			if cmp(base[j], base[i]) > 0 {
 				for {
 					j -= siz2
-					if cmp(unsafe.Pointer(&base[j]), unsafe.Pointer(&base[i])) <= 0 {
+					if cmp(base[j], base[i]) <= 0 {
 						j += 1
-						if cmp(unsafe.Pointer(&base[j]), unsafe.Pointer(&base[i])) <= 0 {
+						if cmp(base[j], base[i]) <= 0 {
 							j += 1
 						}
 						break
@@ -198,14 +195,14 @@ func zendInsertSort(base []string, start, end int, cmp compareFunc, swp swapFunc
 					}
 					if j == start+1 {
 						j -= 1
-						if cmp(unsafe.Pointer(&base[i]), unsafe.Pointer(&base[j])) > 0 {
+						if cmp(base[i], base[j]) > 0 {
 							j += 1
 						}
 						break
 					}
 				}
 				for k := i; k > j; k -= 1 {
-					swp(unsafe.Pointer(&base[k]), unsafe.Pointer(&base[k-1]))
+					swp(k, k-1)
 				}
 			}
 		}
