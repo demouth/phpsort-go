@@ -1,4 +1,4 @@
-package sortregular
+package phpsort
 
 import (
 	"reflect"

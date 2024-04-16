@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/demouth/sortregular-go"
+	"github.com/demouth/phpsort-go"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 		"    05",
 	}
 
-	sortregular.Sort(strings)
+	phpsort.Sort(strings)
 
 	for _, s := range strings {
 		println(s)

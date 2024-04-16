@@ -5,13 +5,13 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/demouth/sortregular-go"
+	"github.com/demouth/phpsort-go"
 )
 
 func main() {
 	strs := makeStrings(1000)
 	sort.SliceStable(strs, func(i, j int) bool {
-		if sortregular.ZendiSmartStrcmp(strs[i], strs[j]) < 0 {
+		if phpsort.ZendiSmartStrcmp(strs[i], strs[j]) < 0 {
 			return true
 		}
 		return false

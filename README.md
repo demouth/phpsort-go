@@ -1,16 +1,17 @@
-# SORT_REGULAR in Go
+# phpsort-go
 
-This repository contains a Go implementation of the `SORT_REGULAR` from PHP.
+`phpsort-go` is a Go language port of the PHP sort function.
+It provides functionality similar to the `sort` function used in PHP.
 
 ## Usage
 
-Import the package and use the sort_regular function:
+Import the package and use the Sort function:
 
 ```go
 package main
 
 import (
-	"github.com/demouth/sortregular-go"
+	"github.com/demouth/phpsort-go"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
 		"    05",
 	}
 
-	sortregular.Sort(strings)
+	phpsort.Sort(strings)
 
 	for _, s := range strings {
 		println(s)
@@ -39,21 +40,21 @@ When using the comparison function:
 package main
 
 import (
-	"github.com/demouth/sortregular-go"
+	"github.com/demouth/phpsort-go"
 )
 
 func main() {
-	println(sortregular.ZendiSmartStrcmp("2", "1"))    // 1
-	println(sortregular.ZendiSmartStrcmp("1", "2"))    // -1
-	println(sortregular.ZendiSmartStrcmp("  10", "2")) // 1
-	println(sortregular.ZendiSmartStrcmp("  1", "1"))  // 0
-	println(sortregular.ZendiSmartStrcmp("A", "1"))    // 1
+	println(phpsort.ZendiSmartStrcmp("2", "1"))    // 1
+	println(phpsort.ZendiSmartStrcmp("1", "2"))    // -1
+	println(phpsort.ZendiSmartStrcmp("  10", "2")) // 1
+	println(phpsort.ZendiSmartStrcmp("  1", "1"))  // 0
+	println(phpsort.ZendiSmartStrcmp("A", "1"))    // 1
 }
 ```
 
-## PHP SORT_REGULAR
+## Behavior of the sort function in PHP
 
-For reference, here's the original `SORT_REGULAR` in PHP:
+For reference, here's the original `sort` function in PHP:
 
 ```php
 <?php

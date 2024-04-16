@@ -1,3 +1,3 @@
-module github.com/demouth/sortregular-go
+module github.com/demouth/phpsort-go
 
 go 1.20

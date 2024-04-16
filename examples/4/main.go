@@ -3,12 +3,12 @@ package main
 import (
 	"strconv"
 
-	"github.com/demouth/sortregular-go"
+	"github.com/demouth/phpsort-go"
 )
 
 func main() {
 	strs := makeStrings(10000)
-	sortregular.Sort(strs)
+	phpsort.Sort(strs)
 }
 
 func makeStrings(n int) []string {
