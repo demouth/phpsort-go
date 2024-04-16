@@ -1,7 +1,5 @@
 package phpsort
 
-import "reflect"
-
 type compareFunc func(a, b string) int
 
 type swapFunc func(i int, j int)
@@ -25,7 +23,9 @@ func Sort(strings []string, opts ...option) {
 	for _, opt := range opts {
 		opt(o)
 	}
-	swp := reflect.Swapper(strings)
+	swp := func(i, j int) {
+		strings[i], strings[j] = strings[j], strings[i]
+	}
 	zendSort(strings, 0, len(strings)-1, o.cmp, swp)
 }
 
