@@ -1,8 +1,16 @@
 package sortregular
 
+import "reflect"
+
 type compareFunc func(a, b string) int
 
 type swapFunc func(i int, j int)
+
+func SortRegular(strings []string) {
+	cmp := ZendiSmartStrcmp
+	swp := reflect.Swapper(strings)
+	ZendSort(strings, 0, len(strings)-1, cmp, swp)
+}
 
 // https://github.com/php/php-src/blob/0a0e8064e044b133da423952d8e78d50c4841a2e/Zend/zend_sort.c#L248
 func ZendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {

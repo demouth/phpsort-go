@@ -2,7 +2,6 @@ package sortregular
 
 import (
 	"math"
-	"reflect"
 )
 
 const (
@@ -12,10 +11,27 @@ const (
 	longMinDigits = "-9223372036854775808"
 )
 
-func SortRegular(strings []string) {
-	cmp := ZendiSmartStrcmp
-	swp := reflect.Swapper(strings)
-	ZendSort(strings, 0, len(strings)-1, cmp, swp)
+// if s1 is larger, return 1
+// if s2 is larger, return -1
+// https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/Zend/zend_operators.c#L3323
+func ZendiSmartStrcmp(s1, s2 string) int {
+	ret1, _, lval1, dval1, _ := isNumericStringEx(s1)
+	ret2, _, lval2, dval2, _ := isNumericStringEx(s2)
+
+	if ret1 != 0 && ret2 != 0 {
+		if dval1-dval2 == 0 && ((!math.IsInf(dval1, 0) && (lval1 > math.MaxInt64 || lval1 < math.MinInt64)) || (!math.IsInf(dval1, 0) && (lval2 > math.MaxInt64 || lval2 < math.MinInt64))) {
+			return zendNormalizeBool(dval1)
+		}
+
+		if lval1 > lval2 {
+			return 1
+		} else if lval1 < lval2 {
+			return -1
+		}
+		return 0
+	} else {
+		return zendBinaryStrcmp(s1, s2)
+	}
 }
 
 func zendBinaryStrcmp(s1, s2 string) int {
@@ -103,27 +119,4 @@ func zendNormalizeBool(value float64) int {
 		return 1
 	}
 	return 0
-}
-
-// if s1 is larger, return 1
-// if s2 is larger, return -1
-// https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/Zend/zend_operators.c#L3323
-func ZendiSmartStrcmp(s1, s2 string) int {
-	ret1, _, lval1, dval1, _ := isNumericStringEx(s1)
-	ret2, _, lval2, dval2, _ := isNumericStringEx(s2)
-
-	if ret1 != 0 && ret2 != 0 {
-		if dval1-dval2 == 0 && ((!math.IsInf(dval1, 0) && (lval1 > math.MaxInt64 || lval1 < math.MinInt64)) || (!math.IsInf(dval1, 0) && (lval2 > math.MaxInt64 || lval2 < math.MinInt64))) {
-			return zendNormalizeBool(dval1)
-		}
-
-		if lval1 > lval2 {
-			return 1
-		} else if lval1 < lval2 {
-			return -1
-		}
-		return 0
-	} else {
-		return zendBinaryStrcmp(s1, s2)
-	}
 }
