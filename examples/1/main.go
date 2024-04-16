@@ -16,7 +16,7 @@ func main() {
 		"    05",
 	}
 
-	sortregular.SortRegular(strings)
+	sortregular.Sort(strings)
 
 	for _, s := range strings {
 		println(s)

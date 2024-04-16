@@ -298,7 +298,18 @@ func TestSortStrings(t *testing.T) {
 			target := make([]string, len(test.input))
 			copy(target, test.input)
 
-			SortRegular(target)
+			Sort(target)
+
+			if !reflect.DeepEqual(target, test.expected) {
+				t.Errorf("Expected: %#v, got: %#v", test.expected, target)
+			}
+		})
+
+		t.Run(test.name+" sort_regular option", func(t *testing.T) {
+			target := make([]string, len(test.input))
+			copy(target, test.input)
+
+			Sort(target, WithSortRegular())
 
 			if !reflect.DeepEqual(target, test.expected) {
 				t.Errorf("Expected: %#v, got: %#v", test.expected, target)
@@ -311,7 +322,7 @@ func Benchmark100(b *testing.B) {
 	strs := makeStrings(100)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		SortRegular(strs)
+		Sort(strs)
 	}
 }
 

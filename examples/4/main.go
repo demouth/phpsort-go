@@ -8,7 +8,7 @@ import (
 
 func main() {
 	strs := makeStrings(10000)
-	sortregular.SortRegular(strs)
+	sortregular.Sort(strs)
 }
 
 func makeStrings(n int) []string {

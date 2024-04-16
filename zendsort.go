@@ -6,10 +6,27 @@ type compareFunc func(a, b string) int
 
 type swapFunc func(i int, j int)
 
-func SortRegular(strings []string) {
-	cmp := ZendiSmartStrcmp
+type options struct {
+	cmp compareFunc
+}
+
+type option func(*options)
+
+func WithSortRegular() option {
+	return func(o *options) {
+		o.cmp = ZendiSmartStrcmp
+	}
+}
+
+func Sort(strings []string, opts ...option) {
+	o := &options{
+		cmp: ZendiSmartStrcmp,
+	}
+	for _, opt := range opts {
+		opt(o)
+	}
 	swp := reflect.Swapper(strings)
-	zendSort(strings, 0, len(strings)-1, cmp, swp)
+	zendSort(strings, 0, len(strings)-1, o.cmp, swp)
 }
 
 // https://github.com/php/php-src/blob/0a0e8064e044b133da423952d8e78d50c4841a2e/Zend/zend_sort.c#L248
