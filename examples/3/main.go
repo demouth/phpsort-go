@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/demouth/phpsort-go"
+	"github.com/demouth/phpsort-go/v2"
 )
 
 func main() {
