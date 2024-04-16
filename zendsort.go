@@ -9,11 +9,11 @@ type swapFunc func(i int, j int)
 func SortRegular(strings []string) {
 	cmp := ZendiSmartStrcmp
 	swp := reflect.Swapper(strings)
-	ZendSort(strings, 0, len(strings)-1, cmp, swp)
+	zendSort(strings, 0, len(strings)-1, cmp, swp)
 }
 
 // https://github.com/php/php-src/blob/0a0e8064e044b133da423952d8e78d50c4841a2e/Zend/zend_sort.c#L248
-func ZendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
+func zendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
 	for {
 		nmemb := end - start + 1
 		if nmemb <= 16 {
@@ -57,10 +57,10 @@ func ZendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
 		done:
 			swp(pivotIdx, i-1)
 			if i-1-startIdx < endIdx-i {
-				ZendSort(base, start, i-1, cmp, swp)
+				zendSort(base, start, i-1, cmp, swp)
 				start = i
 			} else {
-				ZendSort(base, i, end, cmp, swp)
+				zendSort(base, i, end, cmp, swp)
 				end = i - 1
 			}
 		}
