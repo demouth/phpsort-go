@@ -84,10 +84,17 @@ func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 	}
 
 	if ptr < length && isDigit(str[ptr]) {
-		for ptr < length && (isDigit(str[ptr])) {
-			tmpLval = tmpLval*10 + int64(str[ptr]-'0')
+		for ptr < length && (str[ptr] == '0') {
 			ptr++
 		}
+
+		if ptr < length && isDigit(str[ptr]) {
+			for ptr < length && (isDigit(str[ptr])) {
+				tmpLval = tmpLval*10 + int64(str[ptr]-'0')
+				ptr++
+			}
+		}
+
 	} else {
 		return 0, 0, 0, 0, false
 	}
