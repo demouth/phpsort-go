@@ -6,13 +6,18 @@ import (
 
 const (
 	IS_LONG   = 1
-	IS_DOUBLE = 2 // not supported
+	IS_DOUBLE = 2
 
 	longMinDigits = "-9223372036854775808"
 )
 
-// if s1 is larger, return 1
-// if s2 is larger, return -1
+// ZendiSmartStrcmp is port of zendi_smart_strcmp from php-src.
+//
+// Compare two strings in a smart way.
+//
+//   - if s1 is larger, return 1
+//   - if s2 is larger, return -1
+//
 // https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/Zend/zend_operators.c#L3323
 func ZendiSmartStrcmp(s1, s2 string) int {
 	ret1, _, lval1, dval1, _ := isNumericStringEx(s1)
@@ -21,6 +26,20 @@ func ZendiSmartStrcmp(s1, s2 string) int {
 	if ret1 != 0 && ret2 != 0 {
 		if dval1-dval2 == 0 && ((!math.IsInf(dval1, 0) && (lval1 > math.MaxInt64 || lval1 < math.MinInt64)) || (!math.IsInf(dval1, 0) && (lval2 > math.MaxInt64 || lval2 < math.MinInt64))) {
 			return zendNormalizeBool(dval1)
+		}
+
+		if ret1 == IS_DOUBLE || ret2 == IS_DOUBLE {
+			if ret1 != IS_DOUBLE {
+				dval1 = float64(lval1)
+			} else if ret2 != IS_DOUBLE {
+				dval2 = float64(lval2)
+			}
+			if dval1 > dval2 {
+				return 1
+			} else if dval1 < dval2 {
+				return -1
+			}
+			return 0
 		}
 
 		if lval1 > lval2 {
@@ -67,9 +86,10 @@ func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 	ptr := 0
 	// digits := 0
 	// dpOrE := 0
-	localDval := 0.0
 	var tmpLval int64
+	var localDval float64
 	neg := false
+	var isDouble bool
 
 	// Skip any whitespace
 	for ptr < length && (str[ptr] == ' ' || str[ptr] == '\t' || str[ptr] == '\n' || str[ptr] == '\r' || str[ptr] == '\v' || str[ptr] == '\f') {
@@ -99,6 +119,12 @@ func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 		return 0, 0, 0, 0, false
 	}
 
+	if ptr < length && str[ptr] == '.' {
+		isDouble = true
+		localDval, ptr = parseDouble(str, ptr)
+		localDval += float64(tmpLval)
+	}
+
 	if ptr < length {
 		for ptr < length && (str[ptr] == ' ' || str[ptr] == '\t' || str[ptr] == '\n' || str[ptr] == '\r' || str[ptr] == '\v' || str[ptr] == '\f') {
 			ptr++
@@ -108,11 +134,32 @@ func isNumericStringEx(str string) (uint8, int, int64, float64, bool) {
 		}
 	}
 
+	if isDouble {
+		if neg {
+			localDval = -localDval
+		}
+		return IS_DOUBLE, 0, 0, localDval, false
+	}
+
 	if neg {
 		tmpLval = -tmpLval
 	}
+	return IS_LONG, 0, tmpLval, 0, false
+}
 
-	return IS_LONG, 0, tmpLval, localDval, false
+func parseDouble(str string, ptr int) (float64, int) {
+	localDval := 0.0
+	length := len(str)
+	if ptr < length && str[ptr] == '.' {
+		ptr++
+		divisor := 10.0
+		for ptr < length && isDigit(str[ptr]) {
+			localDval += float64(str[ptr]-'0') / divisor
+			divisor *= 10
+			ptr++
+		}
+	}
+	return localDval, ptr
 }
 
 func isDigit(c byte) bool {
