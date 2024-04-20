@@ -46,7 +46,7 @@ func zendSort(base []string, start, end int, cmp compareFunc, swp swapFunc) {
 			pivotIdx = start + 1
 			pivot := base[pivotIdx]
 			i := pivotIdx + 1
-			j := startIdx + nmemb - 1
+			j := endIdx - 1
 
 			for {
 				for cmp(pivot, base[i]) > 0 {
@@ -189,46 +189,48 @@ func zendInsertSort(base []string, start, end int, cmp compareFunc, swp swapFunc
 
 		for i := 1 + start; i < sentry; i += 1 {
 			j := i - 1
-			if cmp(base[j], base[i]) > 0 {
-				for j != start {
-					j -= 1
-					if cmp(base[j], base[i]) <= 0 {
-						j += 1
-						break
-					}
+			if !(cmp(base[j], base[i]) > 0) {
+				continue
+			}
+			for j != start {
+				j -= 1
+				if !(cmp(base[j], base[i]) > 0) {
+					j += 1
+					break
 				}
-				for k := i; k > j; k -= 1 {
-					swp(k, k-1)
-				}
+			}
+			for k := i; k > j; k -= 1 {
+				swp(k, k-1)
 			}
 		}
 
 		for i := sentry; i < end+1; i += 1 {
 			j := i - 1
-			if cmp(base[j], base[i]) > 0 {
-				for {
-					j -= siz2
-					if cmp(base[j], base[i]) <= 0 {
+			if !(cmp(base[j], base[i]) > 0) {
+				continue
+			}
+			for {
+				j -= siz2
+				if !(cmp(base[j], base[i]) > 0) {
+					j += 1
+					if !(cmp(base[j], base[i]) > 0) {
 						j += 1
-						if cmp(base[j], base[i]) <= 0 {
-							j += 1
-						}
-						break
 					}
-					if j == start {
-						break
-					}
-					if j == start+1 {
-						j -= 1
-						if cmp(base[i], base[j]) > 0 {
-							j += 1
-						}
-						break
-					}
+					break
 				}
-				for k := i; k > j; k -= 1 {
-					swp(k, k-1)
+				if j == start {
+					break
 				}
+				if j == start+1 {
+					j -= 1
+					if cmp(base[i], base[j]) > 0 {
+						j += 1
+					}
+					break
+				}
+			}
+			for k := i; k > j; k -= 1 {
+				swp(k, k-1)
 			}
 		}
 	}
