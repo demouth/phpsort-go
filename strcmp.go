@@ -18,6 +18,7 @@ const (
 //   - if s1 is larger, return 1
 //   - if s2 is larger, return -1
 //
+// https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/ext/standard/array.c#L114
 // https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/Zend/zend_operators.c#L3323
 func ZendiSmartStrcmp(s1, s2 string) int {
 	ret1, _, lval1, dval1, _ := isNumericStringEx(s1)
