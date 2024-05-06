@@ -7,6 +7,8 @@ type swapFunc func(i int, j int)
 
 type options struct {
 	cmp compareFunc
+	// flag to enable PHP7-compatible sorting behavior
+	php7Mode bool
 }
 
 type option func(*options)
@@ -17,9 +19,22 @@ func WithSortRegular() option {
 	}
 }
 
+// WithPHP7Mode enables PHP7-compatible sorting behavior for the sort function.
+//
+// The following two RFC implementations have been excluded:
+//   - [PHP RFC: Make sorting stable](https://wiki.php.net/rfc/stable_sorting)
+//   - [PHP RFC: Saner numeric strings](https://wiki.php.net/rfc/saner-numeric-strings)
+func WithPHP7Mode() option {
+	return func(o *options) {
+		o.php7Mode = true
+		o.cmp = zendiSmartStrcmp_PHP7
+	}
+}
+
 func Sort(strings []string, opts ...option) {
 	o := &options{
-		cmp: ZendiSmartStrcmp,
+		cmp:      ZendiSmartStrcmp,
+		php7Mode: false,
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -30,31 +45,46 @@ func Sort(strings []string, opts ...option) {
 		m[&s] = i
 	}
 
-	ext := make([]int, len(strings))
-	for i := range strings {
-		ext[i] = i
-	}
+	var (
+		cmp compareStableFunc
+		swp swapFunc
+	)
 
-	swp := func(i, j int) {
-		strings[i], strings[j] = strings[j], strings[i]
-		ext[i], ext[j] = ext[j], ext[i]
-	}
-
-	// https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/ext/standard/array.c#L105
-	cmpStable := func(a, b string, ai, bi int) int {
-		r := ZendiSmartStrcmp(a, b)
-		if r == 0 {
-			if ext[ai] > ext[bi] {
-				return 1
-			} else if ext[ai] < ext[bi] {
-				return -1
-			}
-			return 0
+	if o.php7Mode {
+		swp = func(i, j int) {
+			strings[i], strings[j] = strings[j], strings[i]
 		}
-		return r
+
+		cmp = func(a, b string, _, _ int) int {
+			return o.cmp(a, b)
+		}
+	} else {
+		ext := make([]int, len(strings))
+		for i := range strings {
+			ext[i] = i
+		}
+
+		swp = func(i, j int) {
+			strings[i], strings[j] = strings[j], strings[i]
+			ext[i], ext[j] = ext[j], ext[i]
+		}
+
+		// https://github.com/php/php-src/blob/98b43d07f9d0bea021c8fd6bda70bfdbbb7a6b7f/ext/standard/array.c#L105
+		cmp = func(a, b string, ai, bi int) int {
+			r := o.cmp(a, b)
+			if r == 0 {
+				if ext[ai] > ext[bi] {
+					return 1
+				} else if ext[ai] < ext[bi] {
+					return -1
+				}
+				return 0
+			}
+			return r
+		}
 	}
 
-	zendSort(strings, 0, len(strings)-1, cmpStable, swp)
+	zendSort(strings, 0, len(strings)-1, cmp, swp)
 }
 
 // https://github.com/php/php-src/blob/0a0e8064e044b133da423952d8e78d50c4841a2e/Zend/zend_sort.c#L248
@@ -83,7 +113,7 @@ func zendSort(base []string, start, end int, cmp compareStableFunc, swp swapFunc
 			j := endIdx - 1
 
 			for {
-				for cmp(pivot, base[i], pivotIdx, i) >= 0 {
+				for cmp(pivot, base[i], pivotIdx, i) > 0 {
 					i++
 					if i == j {
 						goto done

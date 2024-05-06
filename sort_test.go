@@ -432,8 +432,128 @@ func TestSortStrings(t *testing.T) {
 	}
 }
 
+func TestStability(t *testing.T) {
+
+	tests := []struct {
+		name         string
+		input        []string
+		expectedPHP8 []string
+		expectedPHP7 []string
+	}{
+
+		{
+			"test14-stability.php",
+			[]string{
+				"1.0",
+				" 1",
+				"1 ",
+				"+1.0",
+			},
+			// PHP8
+			[]string{
+				"1.0",
+				" 1",
+				"1 ",
+				"+1.0",
+			},
+			// PHP7
+			[]string{
+				"1.0",
+				" 1",
+				"+1.0",
+				"1 ",
+			},
+		},
+		{
+			"test15-stability.php",
+			[]string{
+				"1",
+				"1.0",
+				"1.00",
+				"1.000",
+				"1.0000",
+				" 1",
+				"  1",
+				"1 ",
+				"1  ",
+				"+1",
+				"+1.0",
+				"+1.00",
+				"+1.000",
+				" +1",
+				"  +1",
+				"+1 ",
+				"+1  ",
+			},
+			// PHP8
+			[]string{
+				"1",
+				"1.0",
+				"1.00",
+				"1.000",
+				"1.0000",
+				" 1",
+				"  1",
+				"1 ",
+				"1  ",
+				"+1",
+				"+1.0",
+				"+1.00",
+				"+1.000",
+				" +1",
+				"  +1",
+				"+1 ",
+				"+1  ",
+			},
+			// PHP7
+			[]string{
+				"+1",
+				"  +1",
+				" +1",
+				"+1 ",
+				"+1  ",
+				"+1.000",
+				"+1.00",
+				"+1.0",
+				"1",
+				"1 ",
+				"1.0",
+				"  1",
+				" 1",
+				"1  ",
+				"1.0000",
+				"1.000",
+				"1.00",
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name+" PHP8", func(t *testing.T) {
+			target := make([]string, len(test.input))
+			copy(target, test.input)
+
+			Sort(target)
+
+			if !reflect.DeepEqual(target, test.expectedPHP8) {
+				t.Errorf("Expected: %#v, got: %#v", test.expectedPHP8, target)
+			}
+		})
+
+		t.Run(test.name+" PHP7", func(t *testing.T) {
+			target := make([]string, len(test.input))
+			copy(target, test.input)
+
+			Sort(target, WithPHP7Mode())
+
+			if !reflect.DeepEqual(target, test.expectedPHP7) {
+				t.Errorf("Expected: %#v, got: %#v", test.expectedPHP7, target)
+			}
+		})
+	}
+}
+
 func Benchmark100(b *testing.B) {
-	strs := makeStrings(100)
+	strs := makeStrings(10000)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		Sort(strs)

@@ -93,3 +93,46 @@ array(8) {
 */
 ```
 
+## PHP7 Mode
+
+Sorting results may differ between PHP7 and PHP8. This is due to the implementation of the following two RFCs:
+
+- [PHP RFC: Make sorting stable](https://wiki.php.net/rfc/stable_sorting)
+- [PHP RFC: Saner numeric strings](https://wiki.php.net/rfc/saner-numeric-strings)
+
+By default, phpsort-go performs sorting compliant with PHP8. However, by specifying `WithPHP7Mode`, you can perform sorting that reproduces PHP7 behavior.
+
+Here's an example of how to use it:
+
+```go
+package main
+
+import (
+	"github.com/demouth/phpsort-go/v2"
+)
+
+func main() {
+	strings := []string{
+		"1.0",
+		" 1",
+		"1 ",
+		"+1.0",
+	}
+
+	phpsort.Sort(strings, phpsort.WithPHP7Mode())
+
+	for _, s := range strings {
+		println(s)
+	}
+	// Using `WithPHP7Mode` will produce the following results:
+	//   "1.0"
+	//   " 1"
+	//   "+1.0"
+	//   "1 "
+	// Note that without WithPHP7Mode, the following results will be produced:
+	//   "1.0",
+	//   " 1",
+	//   "1 ",
+	//   "+1.0",
+}
+```
